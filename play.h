@@ -25,8 +25,13 @@ int play(int turn,SDL_Surface* screenSurface,SDL_Window* window,char* t0,int* f1
     else{
         printf("it's ");name(p2);printf("'s turn ...\n");
     }
-    int checked=0;
-    is_my_king_checked(&x,turn%2,&checked);
+    int checked=0,wayOut=0,dead=1;
+    how_is_my_king(&x,turn%2,&checked,&wayOut,&dead);
+    if(dead){
+        if(!beSureKingIsDead(&x,checked,turn%2)){
+        return 0;
+        }
+    }
     if(!beSureKingIsDead(&x,checked,turn%2)){
         return 0;
     }

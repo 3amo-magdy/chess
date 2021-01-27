@@ -137,6 +137,7 @@ int take_input(game*s,int moves[8][8],int *a,int *b,int*m,int*n,int who,SDL_Wind
                 else if(q.key.keysym.sym==SDLK_s){
                         //save and
                         //stay in the big while loop waiting for another input
+                        MsgBox("Saved successfuly");
                         save();
                         break;
                 }
@@ -421,7 +422,193 @@ int can_it_really(game*s,int who,unsigned long long u,int *a,int *b){
     }
     return 1;
 }
-
+//if something can block the way between a threatening rook and a checked king :
+void rook_defence(int i,int j,int y,int x,game* s,int who,int*dead){
+    //uses the co-ordinates to loop through all the places:
+    //if they share the same row:
+    if(x==j){
+        if(i>y){
+            for(int k=y+1;k<i;k++){
+                if((one<<(8*k+x))&attack_zone(s,who)){
+                    int howmany=0;
+                    //get all the pieces that can block the way (move in-between):
+                    unsigned long long int w=who_is_attacking(s,k,x,who,&howmany);
+                    //loop 64 times (representing the 64 bits):
+                    for(int a=0;a<8;a++){
+                        for(int b=0;b<8;b++){
+                            //if there's a 1 representing (a,b) in the 64-bit:
+                            if(((one<<(a*8+b))&w)!=0){
+                                //and it's not the king:
+                                if(s->board[a][b]=='k'||s->board[a][b]=='K'){continue;}
+                                //check if it's valid or not:
+                                if(is_ok_to_move(s,a,b,k,x,y,x,who)){
+                                    //if yes then declare that it's not dead yet and return
+                                    *dead=0;
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            for(int k=y-1;k>i;k--){
+                if((one<<(8*k+x))& attack_zone(s,who)){
+                    int howmany=0;
+                    unsigned long long int w=who_is_attacking(s,k,x,who,&howmany);
+                    for(int a=0;a<8;a++){
+                        for(int b=0;b<8;b++){
+                            if(((one<<(a*8+b))&w)!=0){
+                                if(s->board[a][b]=='k'||s->board[a][b]=='K'){continue;}
+                                if(is_ok_to_move(s,a,b,k,x,y,x,who)){
+                                    *dead=0;
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    //if they share the same column:
+    else if(y==i){
+        if(j>x){
+            for(int k=x+1;k<j;k++){
+                if((one<<(8*y+k))& attack_zone(s,who)){
+                    int howmany=0;
+                    unsigned long long int w=who_is_attacking(s,y,k,who,&howmany);
+                    for(int a=0;a<8;a++){
+                        for(int b=0;b<8;b++){
+                            if(((one<<(a*8+b))&w)!=0){
+                                if(s->board[a][b]=='k'||s->board[a][b]=='K'){continue;}
+                                if(is_ok_to_move(s,a,b,y,k,y,x,who)){
+                                    *dead=0;
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            for(int k=j+1;k<x;k++){
+                if((one<<(8*k+x))& attack_zone(s,who)){
+                    int howmany=0;
+                    unsigned long long int w=who_is_attacking(s,y,k,who,&howmany);
+                    for(int a=0;a<8;a++){
+                        for(int b=0;b<8;b++){
+                            if(((one<<(a*8+b))&w)!=0){
+                                if(s->board[a][b]=='k'||s->board[a][b]=='K'){continue;}
+                                if(is_ok_to_move(s,a,b,y,k,y,x,who)){
+                                    *dead=0;
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+//the same as the previous function but here the threatening piece is a bishop:
+void bishop_defence(int i,int j,int y,int x,game* s,int who,int*dead){
+    if(i>y&&j>x){
+        for(int a=y+1;a<i;a++){
+            for(int b=x+1;b<j;b++){
+                if(a-y==b-x){
+                    if((one<<(8*b+a))& attack_zone(s,who)){
+                        int howmany=0;
+                        unsigned long long int w=who_is_attacking(s,a,b,who,&howmany);
+                        for(int r=0;r<8;r++){
+                            for(int t=0;t<8;t++){
+                                if(((one<<(r*8+t))&w)!=0){
+                                    if(s->board[a][b]=='k'||s->board[a][b]=='K'){continue;}
+                                    if(is_ok_to_move(s,r,t,a,b,y,x,who)){
+                                        *dead=0;
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if(i<y&&j>x){
+        for(int a=y-1;a>i;a--){
+            for(int b=x+1;b<j;b++){
+                if(y-a==b-x){
+                    if((one<<(8*b+a))& attack_zone(s,who)){
+                        int howmany=0;
+                        unsigned long long int w=who_is_attacking(s,a,b,who,&howmany);
+                        for(int r=0;r<8;r++){
+                            for(int t=0;t<8;t++){
+                                if(((one<<(r*8+t))&w)!=0){
+                                    if(s->board[a][b]=='k'||s->board[a][b]=='K'){continue;}
+                                    if(is_ok_to_move(s,r,t,a,b,y,x,who)){
+                                        *dead=0;
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if(i<y&&j<x){
+        for(int a=y-1;a>i;a--){
+            for(int b=x-1;b>j;b--){
+                if(a-y==b-x){
+                    if((one<<(8*b+a))& attack_zone(s,who)){
+                        int howmany=0;
+                        unsigned long long int w=who_is_attacking(s,a,b,who,&howmany);
+                        for(int r=0;r<8;r++){
+                            for(int t=0;t<8;t++){
+                                if(((one<<(r*8+t))&w)!=0){
+                                    if(s->board[a][b]=='k'||s->board[a][b]=='K'){continue;}
+                                    if(is_ok_to_move(s,r,t,a,b,y,x,who)){
+                                        *dead=0;
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if(i>y&&j<x){
+        for(int a=y+1;a<i;a++){
+            for(int b=x-1;b>j;b--){
+                if(y-a==b-x){
+                    if((one<<(8*b+a))& attack_zone(s,who)){
+                        int howmany=0;
+                        unsigned long long int w=who_is_attacking(s,a,b,who,&howmany);
+                        for(int r=0;r<8;r++){
+                            for(int t=0;t<8;t++){
+                                if(((one<<(r*8+t))&w)!=0){
+                                    if(s->board[a][b]=='k'||s->board[a][b]=='K'){continue;}
+                                    if(is_ok_to_move(s,r,t,a,b,y,x,who)){
+                                        *dead=0;
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 //the following function helps to prepare the new turns based on the previous one:
 //s1 is the address of the previous game(turn)
 //s2 is the address of the generated game(the following turn)

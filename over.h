@@ -131,7 +131,7 @@ int noleftpiece(game *s)
 //*wayout = 1 if the king has any valid move,  0 otherwise.
 //*dead     = 1  if the king is checkmate,  0 other wise.
 //it take game s and who refer king we want to check and way out and dead
-void is_my_king_checked(game*s,int who,int* checked){// who = 0 for 'k',who = 1 for'K'
+void how_is_my_king(game*s,int who,int* checked,int*wayout,int*dead){// who = 0 for 'k',who = 1 for'K'
     int x=0;
     int y=0;
     //find king place
@@ -160,9 +160,101 @@ void is_my_king_checked(game*s,int who,int* checked){// who = 0 for 'k',who = 1 
     // check if it checked or not
     if (((one<<(y*8+x))&u) == 0){
         *checked=0;
+        *dead=0;
     }
     else{
         *checked=1;
+    }
+    //check if king can run away from danger by his self
+    for(int xDir = -1; xDir < 2; xDir++){
+        for(int yDir = -1; yDir < 2; yDir++){
+            if(xDir+x <= 7 && xDir+x >= 0 && y+yDir >= 0 && yDir+y <= 7 && !(xDir == 0 && yDir == 0)){
+                if(s->board[yDir+y][xDir+x] == '.'||s->board[yDir+y][xDir+x] == '-'){
+                    if((((one<<((yDir+y)*8+(xDir+x)))&u)==0)&&is_ok_to_move(s,y,x,yDir+y,xDir+x,yDir+y,xDir+x,who)){
+                        *wayout=1;
+                        *dead=0;
+                        break;
+                    }
+                }
+                else{
+                    if(who==0){
+                        if(s->board[y+yDir][x+xDir] < 97){
+                            if(is_ok_to_move(s,y,x,(y+yDir),x+xDir,(y+yDir),(x+xDir),who)){
+                                *wayout=1;
+                                *dead=0;
+                                break;
+                            }
+                        }
+                    }
+                    else{
+                        if(s->board[y+yDir][x+xDir] > 97){
+                            if(is_ok_to_move(s,y,x,(y+yDir),(x+xDir),(y+yDir),(x+xDir),who)){
+                                *wayout=1;
+                                *dead=0;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if(*wayout==1){
+            break;
+        }
+    }
+    // show if any other piece can protect king
+
+    if(*wayout==0&&*checked==1){
+        *dead=1;
+        int count=0;
+        unsigned long long int q = who_is_attacking(s,y,x,who-1,&count);
+        for(int i=0;i<8;i++){
+            for(int j=0;j<8;j++){
+                if(((one<<(i*8+j))&q)!=0){
+                    if(((one<<(i*8+j))&attack_zone(s,who))!=0){
+                        int howmany=0;
+                        unsigned long long int w=who_is_attacking(s,i,j,who,&howmany);
+                        for(int a=0;a<8;a++){
+                            for(int b=0;b<8;b++){
+                                if(((one<<(a*8+b))&w)!=0){
+                                    if(s->board[a][b]=='k'||s->board[a][b]=='K'){
+                                        if(is_ok_to_move(s,a,b,i,j,i,j,who)==1){
+                                            *dead=0;
+                                            return;
+                                        }
+                                    }
+                                    else{
+                                        if(is_ok_to_move(s,a,b,i,j,y,x,who)==1){
+                                            *dead=0;
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if(s->board[i][j]=='N'||s->board[i][j]=='n'){
+                        *dead=1;
+                        return;
+                    }
+                    if(s->board[i][j]=='P'||s->board[i][j]=='p'){
+                        *dead=1;
+                        return;
+                    }
+                    if(s->board[i][j]=='R'||s->board[i][j]=='r'){
+                        rook_defence(i,j,y,x,s,who,dead);
+                    }
+                    if(s->board[i][j]=='B'||s->board[i][j]=='b'){
+                        bishop_defence(i,j,y,x,s,who,dead);
+                    }
+                    if(s->board[i][j]=='Q'||s->board[i][j]=='q'){
+                        rook_defence(i,j,y,x,s,who,dead);
+                        if(*dead==0){return;}
+                        bishop_defence(i,j,y,x,s,who,dead);
+                    }
+                }
+            }
+        }
     }
 }
 //to be sure if king is dead or not
