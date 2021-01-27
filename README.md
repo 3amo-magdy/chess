@@ -1,5 +1,5 @@
 # chess in C
-#was made using SDL2 library in pure C 
-#read the documentation report.
-#we hope you like it !
+# Was made using SDL2 library in pure C 
+# Please Read the documentation report.
+# We hope you like it !
 # AMR MAGDY & YOUSSEF SABER
