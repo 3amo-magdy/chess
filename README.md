@@ -1,8 +1,7 @@
-# chess in C
+# chess in c
 # 
-# Was made using SDL2 library in pure C 
-# Please Read the documentation report : [Chess_project.pdf]
-# [game.zip] has the executable file so as [bin/Debug]
-# Hope you like it !
-# 
-# AMR MAGDY & YOUSSEF SABER
+# SDL2 library was used
+#
+# [game.zip] has the executable file, so as the dir [bin/Debug/]
+#
+# Hope you like it ! 
